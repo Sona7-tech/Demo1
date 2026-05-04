@@ -39,7 +39,7 @@ public class HelloWorld implements RequestHandler<Map<String, Object>, Map<Strin
 		} else {
 			return Map.of(
 					"statusCode", 400,
-					"body", String.format("{\"statusCode\":400,\"message\":\"Bad Request: %s %s\"}", method, path)
+					"body", String.format("{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}", path, method)
 			);
 		}
 	}
