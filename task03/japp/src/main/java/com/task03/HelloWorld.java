@@ -16,21 +16,13 @@ import java.util.Map;
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
 	memory = 256
 )
-public class HelloWorld implements RequestHandler<Map<String, Object>, Map<String, Object>> {
+public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
 
-	@Override
-	public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {
-
-		Map<String, Object> body = new HashMap<>();
-		body.put("statusCode", 200);
-		body.put("message", "Hello from Lambda");
-
-		Map<String, Object> response = new HashMap<>();
-		response.put("statusCode", 200);
-		response.put("body", body);
-		response.put("headers", Map.of("content-type", "application/json"));
-		response.put("isBase64Encoded", false);
-
-		return response;
+	public Map<String, Object> handleRequest(Object request, Context context) {
+		System.out.println("Hello from lambda");
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		resultMap.put("statusCode", 200);
+		resultMap.put("message", "Hello from Lambda");
+		return resultMap;
 	}
 }
