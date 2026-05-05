@@ -16,13 +16,24 @@ import java.util.Map;
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
 	memory = 256
 )
-public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
+public class HelloWorld implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
-	public Map<String, Object> handleRequest(Object request, Context context) {
-		System.out.println("Hello from lambda");
-		Map<String, Object> resultMap = new HashMap<String, Object>();
-		resultMap.put("statusCode", 200);
-		resultMap.put("message", "Hello from Lambda");
-		return resultMap;
+	@Override
+	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
+		String path = (String) event.get("rawPath");
+		Map<String, Object> requestContext = (Map<String, Object>) event.get("requestContext");
+		String method = (String) ((Map<String, Object>) requestContext.get("http")).get("method");
+
+		if ("/hello".equals(path) && "GET".equals(method)) {
+			return Map.of(
+					"statusCode", 200,
+					"body", "{\"statusCode\":200,\"message\":\"Hello from Lambda\"}"
+			);
+		} else {
+			return Map.of(
+					"statusCode", 400,
+					"body", String.format("{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}", path, method)
+			);
+		}
 	}
 }
