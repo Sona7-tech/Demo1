@@ -21,13 +21,16 @@ public class HelloWorld implements RequestHandler<Map<String, Object>, Map<Strin
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {
 
-		System.out.println("Hello from lambda");
+		Map<String, Object> body = new HashMap<>();
+		body.put("statusCode", 200);
+		body.put("message", "Hello from Lambda");
 
-		Map<String, Object> resultMap = new HashMap<>();
+		Map<String, Object> response = new HashMap<>();
+		response.put("statusCode", 200);
+		response.put("body", body);
+		response.put("headers", Map.of("content-type", "application/json"));
+		response.put("isBase64Encoded", false);
 
-		resultMap.put("statusCode", 200);
-		resultMap.put("message", "Hello from Lambda");
-
-		return resultMap;
+		return response;
 	}
 }
