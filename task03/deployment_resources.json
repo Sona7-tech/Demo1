@@ -49,7 +49,7 @@
           "integration_type": "lambda",
           "lambda_name": "hello_world",
           "authorization_type": "NONE",
-          "enable_proxy": true
+          "enable_proxy": false
         }
       }
     },
