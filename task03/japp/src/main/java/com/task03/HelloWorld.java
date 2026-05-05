@@ -16,13 +16,18 @@ import java.util.Map;
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
 	memory = 256
 )
-public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
+public class HelloWorld implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
-	public Map<String, Object> handleRequest(Object request, Context context) {
+	@Override
+	public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {
+
 		System.out.println("Hello from lambda");
-		Map<String, Object> resultMap = new HashMap<String, Object>();
+
+		Map<String, Object> resultMap = new HashMap<>();
+
 		resultMap.put("statusCode", 200);
 		resultMap.put("message", "Hello from Lambda");
+
 		return resultMap;
 	}
 }
