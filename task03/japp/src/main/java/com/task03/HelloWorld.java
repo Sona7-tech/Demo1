@@ -24,18 +24,25 @@ public class HelloWorld implements RequestHandler<Map<String, Object>, Map<Strin
 		Map<String, Object> requestContext = (Map<String, Object>) event.get("requestContext");
 		String method = (String) requestContext.get("httpMethod");
 
-		if ("/hello".equals(path) && "GET".equals(method)) {
-			return Map.of(
-					"statusCode", 200,
-					"message", "{\"statusCode\":200,\"message\":\"Hello from Lambda\"}"
-			);
+		if (event.get("httpMethod") != null) {
+			if ("/hello".equals(path) && "GET".equals(method)) {
+				return Map.of(
+						"statusCode", 200,
+						"message", "{\"statusCode\":200,\"message\":\"Hello from Lambda\"}"
+				);
+			} else {
+				return Map.of(
+						"statusCode", 400,
+						"message", String.format(
+								"{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
+								path, method
+						)
+				);
+			}
 		} else {
 			return Map.of(
 					"statusCode", 400,
-					"message", String.format(
-							"{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
-							path, method
-					)
+					"message", "{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. HTTP method is missing in the request.\"}"
 			);
 		}
 	}
