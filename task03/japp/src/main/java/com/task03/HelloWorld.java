@@ -20,19 +20,22 @@ public class HelloWorld implements RequestHandler<Map<String, Object>, Map<Strin
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
-		String path = (String) event.get("rawPath");
+		String path = (String) event.get("path");
 		Map<String, Object> requestContext = (Map<String, Object>) event.get("requestContext");
-		String method = (String) ((Map<String, Object>) requestContext.get("http")).get("method");
+		String method = (String) requestContext.get("httpMethod");
 
 		if ("/hello".equals(path) && "GET".equals(method)) {
 			return Map.of(
 					"statusCode", 200,
-					"body", "{\"statusCode\":200,\"message\":\"Hello from Lambda\"}"
+					"message", "Hello from Lambda"
 			);
 		} else {
 			return Map.of(
 					"statusCode", 400,
-					"body", String.format("{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}", path, method)
+					"message", String.format(
+							"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s",
+							path, method
+					)
 			);
 		}
 	}
