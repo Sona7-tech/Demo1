@@ -27,13 +27,13 @@ public class HelloWorld implements RequestHandler<Map<String, Object>, Map<Strin
 		if ("/hello".equals(path) && "GET".equals(method)) {
 			return Map.of(
 					"statusCode", 200,
-					"message", "Hello from Lambda"
+					"message", "{\"statusCode\":200,\"message\":\"Hello from Lambda\"}"
 			);
 		} else {
 			return Map.of(
 					"statusCode", 400,
 					"message", String.format(
-							"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s",
+							"{\"statusCode\":400,\"message\":\"Bad request syntax or unsupported method. Request path: %s. HTTP method: %s\"}",
 							path, method
 					)
 			);
