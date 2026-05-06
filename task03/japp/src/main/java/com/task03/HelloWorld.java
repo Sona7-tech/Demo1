@@ -16,16 +16,13 @@ import java.util.Map;
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
 	memory = 256
 )
-public class HelloWorld implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class HelloWorld implements RequestHandler<Object, Map<String, Object>> {
 
-	@Override
-	public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent request, Context context) {
+	public Map<String, Object> handleRequest(Object request, Context context) {
 		System.out.println("Hello from lambda");
-
-		APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
-		response.setStatusCode(200);
-		response.setBody("{\"message\": \"Hello from Lambda\"}");
-
-		return response;
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		resultMap.put("statusCode", 200);
+		resultMap.put("message", "Hello from Lambda");
+		return resultMap;
 	}
 }

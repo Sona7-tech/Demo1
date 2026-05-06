@@ -33,5 +33,21 @@
     ],
     "resource_type": "iam_role",
     "tags": {}
+  },
+  "task3_api": {
+    "resource_type": "api_gateway",
+    "deploy_stage": "api",
+    "dependencies": [],
+    "resources": {
+      "/hello": {
+        "GET": {
+          "integration_type": "lambda",
+          "lambda_name": "hello_world",
+          "authorization_type": "NONE",
+          "enable_proxy": false
+        }
+      }
+    },
+    "tags": {}
   }
 }
