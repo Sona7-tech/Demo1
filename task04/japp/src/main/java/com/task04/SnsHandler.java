@@ -7,7 +7,7 @@ import com.syndicate.deployment.model.RetentionSetting;
 import com.syndicate.deployment.annotations.events.SnsEventSource;
 import java.util.HashMap;
 import java.util.Map;
-
+import com.amazonaws.services.lambda.runtime.events.SNSEvent;
 @LambdaHandler(
     lambdaName = "sns_handler",
 	roleName = "sns_handler-role",
@@ -20,13 +20,14 @@ import java.util.Map;
 @SnsEventSource(
 		targetTopic = "lambda_topic"
 )
-public class SnsHandler implements RequestHandler<Object, Map<String, Object>> {
-
-	public Map<String, Object> handleRequest(Object request, Context context) {
-		System.out.println("Hello from lambda");
-		Map<String, Object> resultMap = new HashMap<String, Object>();
+public class SnsHandler implements RequestHandler<SNSEvent, Map<String, Object>> {
+	public Map<String, Object> handleRequest(SNSEvent event, Context context) {
+		for (SNSEvent.SNSRecord record : event.getRecords()) {
+			System.out.println("Received SNS message: " + record.getSNS().getMessage());
+		}
+		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("statusCode", 200);
-		resultMap.put("body", "Hello from Lambda");
+		resultMap.put("body", "Processed SNS message");
 		return resultMap;
 	}
 }
