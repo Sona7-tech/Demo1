@@ -90,14 +90,13 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 			// body sahəsini JSON string kimi qaytar
 			ObjectMapper mapper = new ObjectMapper();
-			String bodyJson = mapper.writeValueAsString(eventItem);
+			String bodyJson = mapper.writeValueAsString(Map.of("event", eventItem));
 
 			response.put("statusCode", 201);
-			response.put("event", eventItem);
+			response.put("body", bodyJson);
 
 			context.getLogger().log("Response: " + response + "\n");
 			return response;
-
 		} catch (Exception e) {
 			context.getLogger().log("Error: " + e.getMessage() + "\n");
 			for (StackTraceElement ste : e.getStackTrace()) {
