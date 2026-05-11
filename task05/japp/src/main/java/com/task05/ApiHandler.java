@@ -1,5 +1,6 @@
 package com.task05;
 
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -20,7 +21,6 @@ import java.util.UUID;
 @LambdaHandler(
 		lambdaName = "api_handler",
 		roleName = "api_handler-role",
-
 		isPublishVersion = true,
 		aliasName = "${lambdas_alias_name}",
 		logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
@@ -39,38 +39,26 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			AmazonDynamoDBClientBuilder.standard().withRegion(REGION);
 
 	private static final DynamoDB dynamoDB = new DynamoDB(clientBuilder.build());
-
 	private static final Table table = dynamoDB.getTable(TABLE_NAME);
+
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	@Override
 	public Map<String, Object> handleRequest(Map<String, Object> request, Context context) {
+
 		Map<String, Object> response = new HashMap<>();
+
 		try {
-			// Log environment variables
-			context.getLogger().log("TABLE_NAME: " + TABLE_NAME + "\n");
-			context.getLogger().log("REGION: " + REGION + "\n");
-
-			if (TABLE_NAME == null || TABLE_NAME.isEmpty()) {
-				context.getLogger().log("ERROR: table_name environment variable is not set!\n");
-				response.put("statusCode", 500);
-				response.put("body", "Internal Server Error: table_name env variable is missing");
-				return response;
-			}
-
-			// Request parsing
 			context.getLogger().log("Request: " + request + "\n");
 
-			Integer principalId = Integer.valueOf(request.get("principalId").toString());
-			context.getLogger().log("principalId: " + principalId + "\n");
+			String bodyStr = (String) request.get("body");
+			Map<String, Object> body = mapper.readValue(bodyStr, Map.class);
 
-			Map<String, String> content = (Map<String, String>) request.get("content");
-			context.getLogger().log("content: " + content +
-					"\n");
+			int principalId = Integer.parseInt(body.get("principalId").toString());
+			Map<String, Object> content = (Map<String, Object>) body.get("content");
 
 			String id = UUID.randomUUID().toString();
 			String createdAt = Instant.now().toString();
-
-			context.getLogger().log("Generated id: " + id + ", createdAt: " + createdAt + "\n");
 
 			Map<String, Object> eventItem = new HashMap<>();
 			eventItem.put("id", id);
@@ -78,7 +66,6 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			eventItem.put("createdAt", createdAt);
 			eventItem.put("body", content);
 
-			// DynamoDB-yə yaz
 			Item item = new Item()
 					.withPrimaryKey("id", id)
 					.withInt("principalId", principalId)
@@ -86,24 +73,35 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 					.withMap("body", content);
 
 			table.putItem(item);
-			context.getLogger().log("Item successfully put to DynamoDB.\n");
 
-			// body sahəsini JSON string kimi qaytar
-			ObjectMapper mapper = new ObjectMapper();
-			String bodyJson = mapper.writeValueAsString(Map.of("event", eventItem));
+			// ✅ NODE.JS EXACT STYLE RESPONSE
+			Map<String, Object> responseBody = new HashMap<>();
+			responseBody.put("statusCode", 201);
+			responseBody.put("event", eventItem);
+
+			Map<String, String> headers = new HashMap<>();
+			headers.put("Content-Type", "application/json");
 
 			response.put("statusCode", 201);
-			response.put("body", bodyJson);
+			response.put("headers", headers);
+			response.put("body", mapper.writeValueAsString(responseBody));
 
-			context.getLogger().log("Response: " + response + "\n");
 			return response;
+
 		} catch (Exception e) {
-			context.getLogger().log("Error: " + e.getMessage() + "\n");
-			for (StackTraceElement ste : e.getStackTrace()) {
-				context.getLogger().log(ste.toString() + "\n");
-			}
+			context.getLogger().log("Error: " + e);
+
 			response.put("statusCode", 500);
-			response.put("body", "Internal Server Error");
+
+			Map<String, Object> error = new HashMap<>();
+			error.put("message", "Internal Server Error");
+
+			try {
+				response.put("body", mapper.writeValueAsString(error));
+			} catch (Exception ex) {
+				response.put("body", "{\"message\":\"Internal Server Error\"}");
+			}
+
 			return response;
 		}
 	}
