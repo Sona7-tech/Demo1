@@ -93,7 +93,7 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 			String bodyJson = mapper.writeValueAsString(eventItem);
 
 			response.put("statusCode", 201);
-			response.put("body", bodyJson);
+			response.put("event", eventItem);
 
 			context.getLogger().log("Response: " + response + "\n");
 			return response;
