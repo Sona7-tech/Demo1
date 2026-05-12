@@ -74,7 +74,7 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 			table.putItem(item);
 
-			// ✅ NODE.JS EXACT STYLE RESPONSE
+
 			Map<String, Object> responseBody = new HashMap<>();
 			responseBody.put("statusCode", 201);
 			responseBody.put("event", eventItem);
