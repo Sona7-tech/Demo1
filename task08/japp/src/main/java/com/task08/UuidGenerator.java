@@ -48,7 +48,10 @@ public class UuidGenerator implements RequestHandler<ScheduledEvent, Map<String,
 
 		try {
 
-			String executionTime = Instant.now().toString();
+			String executionTime = Instant.now()
+					.truncatedTo(java.time.temporal.ChronoUnit.SECONDS)
+					.toString()
+					.replace("Z", ".000Z");
 
 			List<String> ids = new ArrayList<>();
 
@@ -67,9 +70,10 @@ public class UuidGenerator implements RequestHandler<ScheduledEvent, Map<String,
 			metadata.setContentLength(contentBytes.length);
 			metadata.setContentType("application/json");
 
+
 			s3Client.putObject(
 					BUCKET_NAME,
-					executionTime + ".json",
+					executionTime,
 					new ByteArrayInputStream(contentBytes),
 					metadata
 			);
