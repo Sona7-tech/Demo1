@@ -8,10 +8,12 @@
         <option value="$PROJECT_DIR$/task05/japp/pom.xml" />
         <option value="$PROJECT_DIR$/task06/japp/pom.xml" />
         <option value="$PROJECT_DIR$/task08/japp/pom.xml" />
+        <option value="$PROJECT_DIR$/task09/japp/pom.xml" />
+        <option value="$PROJECT_DIR$/task10/japp/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="openjdk-26" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_24" project-jdk-name="corretto-11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

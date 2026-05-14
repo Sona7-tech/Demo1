@@ -1,0 +1,5 @@
+account_id: '913524907044'
+lambdas_alias_name: dev
+logs_expiration: 30
+region: eu-west-1
+target_table: Weather

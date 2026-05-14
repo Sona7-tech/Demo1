@@ -1,0 +1,16 @@
+account_id: '913524907044'
+deploy_target_bucket: syndicate-education-platform-custom-sandbox-artifacts-4338/fu4zu0ro/task10
+expiration: 2026-05-14 22:42:26.989312+00:00
+extended_prefix_mode: true
+project_path: D:\task\Demo1
+region: eu-west-1
+resources_prefix: cmtr-fu4zu0ro-
+tags:
+  run_id: JAP-29
+  task_id: task10
+  topic_id: stm
+  user_id: fu4zu0ro
+temp_aws_access_key_id: ASIA5JMST3QSLQBEJ3FC
+temp_aws_secret_access_key: w8+nXYmpmpUKk5R4Rf+jfovWlyr7KeulusZ144bV
+temp_aws_session_token: IQoJb3JpZ2luX2VjEJ7//////////wEaDGV1LWNlbnRyYWwtMSJHMEUCIQCv412zxnubEfOq/ZEwliYKfY+b4JrJ1DLHfQOg5jZAJgIgDCbdnbaNz90AgKLuHqbTy9Wm34F+hlub5JRBr7hzSUUqyAIIZxAAGgw5MTM1MjQ5MDcwNDQiDOdpk6CL44vGSUu7aiqlAvC1MhBqOckRjZ1ansX4bbwsyO2lUsJMbNu6b9zZpLmtIAcwPRtMKGj+yeDmDcbSwhPRM+z+EvulLuh7Jw57tTXKVZLjtJfjKaybd6Nskt0UfFXG0eymkvOlgqAoNIlpLMPZIP7o7fN4xy0gl5FjNTCqDLQGb0EAwCs7KCZ9QdenVMW+ZoslLbjDCOukL5GLnXyRhfVIV+fegyFfj9K8tqPjsnEWNG/Dk9IYYBTfx/mC9EHgfj7XG9IYRoxfjQWFNzRX3lZpOMhFeZxXeyOvoYlbQ8Z5XX+Z34H0e18Q/2CiXRoyY1J2ymmTsYaMWFJM1/c/3cMrEBQ6hCrQ4Ffy10GTn8K8wTvRXGVxRRYzbv8zkfvE09Dz0VtRh3cv8tjeTwwT6imfMIyImdAGOp0Bfkqj82CDKq+JenwpRshaGNOI1mkeDtpv6PLVpdg3hpMieUFeL+ZFydeNfcib2EN1fuZkqBvaeH/ff4HTij8CNMJiZo7mEMUuQIm0eJSQLK0Ntl0Lsd0y/NFg5csp3y9cQ9cKw+IiyQDQQGA3ZtwjDboiAOKnM7Mp00buMs6PDFMzolfjpye3osOC2F1Uh9f1Bf0mkQJYH+yooJcquA==
+use_temp_creds: false

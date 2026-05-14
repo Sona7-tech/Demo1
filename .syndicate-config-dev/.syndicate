@@ -1,0 +1,6 @@
+name: Demo1
+build_projects_mapping:
+  java: japp
+lambdas:
+  processor:
+    runtime: java
