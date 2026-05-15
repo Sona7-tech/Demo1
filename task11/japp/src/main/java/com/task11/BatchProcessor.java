@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification.S3EventNotificationRecord;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariable;
 import com.syndicate.deployment.annotations.environment.EnvironmentVariables;
+import com.syndicate.deployment.annotations.events.S3EventSource;
 import com.syndicate.deployment.annotations.lambda.LambdaHandler;
 import com.syndicate.deployment.model.RetentionSetting;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -59,6 +60,11 @@ import static com.syndicate.deployment.model.environment.ValueTransformer.RDS_DB
 				valueTransformer = RDS_DB_CLUSTER_NAME_TO_MASTER_USER_SECRET_NAME
 		)
 })
+
+@S3EventSource(
+		targetBucket = "data-transfer-storage",
+		events = {"s3:ObjectCreated:*"}
+)
 public class BatchProcessor implements RequestHandler<S3Event, Map<String, Object>> {
 
 	private static final int BATCH_SIZE = 500;

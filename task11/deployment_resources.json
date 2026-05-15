@@ -18,7 +18,10 @@
             "secretsmanager:GetSecretValue",
             "ec2:CreateNetworkInterface",
             "ec2:DescribeNetworkInterfaces",
-            "ec2:DeleteNetworkInterface"
+            "ec2:DeleteNetworkInterface",
+            "s3:GetObject",
+            "s3:ListBucket",
+            "s3:PutObject"
           ],
           "Effect": "Allow",
           "Resource": "*"
@@ -39,15 +42,6 @@
     "tags": {}
   },
   "batch_processor-role": {
-    "event_sources": [
-      {
-        "resource_type": "s3_trigger",
-        "target_bucket": "data-transfer-storage",
-        "s3_events": [
-          "s3:ObjectCreated:*"
-        ]
-      }
-    ],
     "predefined_policies": [],
     "principal_service": "lambda",
     "custom_policies": [
@@ -246,7 +240,8 @@
           "responses": [],
           "integration_responses": [],
           "default_error_pattern": true,
-          "enable_proxy": true
+          "enable_proxy": true,
+          "async": true
         }
       }
     },
