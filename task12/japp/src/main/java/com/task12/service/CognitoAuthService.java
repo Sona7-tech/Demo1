@@ -2,7 +2,6 @@ package com.task12.service;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
-import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminConfirmSignUpRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
@@ -49,11 +48,6 @@ public class CognitoAuthService {
 					.username(email)
 					.password(password)
 					.permanent(true)
-					.build());
-
-			cognito.adminConfirmSignUp(AdminConfirmSignUpRequest.builder()
-					.userPoolId(userPoolId)
-					.username(email)
 					.build());
 		} catch (UsernameExistsException e) {
 			throw new IllegalArgumentException("User already exists");
