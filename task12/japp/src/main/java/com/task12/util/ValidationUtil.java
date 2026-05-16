@@ -8,7 +8,7 @@ public final class ValidationUtil {
 
 	private static final Pattern EMAIL = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 	private static final Pattern SIGNUP_PASSWORD = Pattern.compile("^[a-zA-Z0-9$%^*\\-_]{12,}$");
-	private static final Pattern SIGNIN_PASSWORD = Pattern.compile("^[a-zA-Z0-9$%^*]{12,}$");
+	private static final Pattern SIGNIN_PASSWORD = Pattern.compile("^[a-zA-Z0-9$%^*\\-_]{12,}$");
 	private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 	private static final Pattern TIME = Pattern.compile("^\\d{2}:\\d{2}$");
 
