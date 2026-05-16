@@ -10,11 +10,7 @@
             "ssm:PutParameter",
             "ssm:GetParameter",
             "kms:Decrypt",
-            "logs:CreateLogGroup",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents",
             "rds-db:connect",
-            "secretsmanager:GetSecretValue",
             "secretsmanager:GetSecretValue",
             "ec2:CreateNetworkInterface",
             "ec2:DescribeNetworkInterfaces",
@@ -241,7 +237,7 @@
           "integration_responses": [],
           "default_error_pattern": true,
           "enable_proxy": true,
-          "async": true
+          "timeoutInMillis": 30000
         }
       }
     },

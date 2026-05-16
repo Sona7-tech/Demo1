@@ -382,7 +382,8 @@ public class ApiHandler implements RequestHandler<APIGatewayProxyRequestEvent, A
 		return new APIGatewayProxyResponseEvent()
 				.withStatusCode(statusCode)
 				.withHeaders(headers)
-				.withBody(body);
+				.withBody(body)
+				.withIsBase64Encoded(false);
 	}
 
 	private static String errorJson(String message) {
