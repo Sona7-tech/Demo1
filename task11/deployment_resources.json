@@ -17,7 +17,16 @@
             "ec2:DeleteNetworkInterface",
             "s3:GetObject",
             "s3:ListBucket",
-            "s3:PutObject"
+            "s3:PutObject",
+            "lambda:PutProvisionedConcurrencyConfig",
+            "lambda:GetProvisionedConcurrencyConfig",
+            "lambda:GetFunctionConcurrency",
+            "lambda:DeleteProvisionedConcurrencyConfig",
+            "lambda:PublishVersion",
+            "lambda:UpdateAlias",
+            "lambda:ListVersionsByFunction",
+            "lambda:GetAlias",
+            "lambda:CreateAlias"
           ],
           "Effect": "Allow",
           "Resource": "*"
