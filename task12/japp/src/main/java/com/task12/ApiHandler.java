@@ -34,7 +34,7 @@ import static com.syndicate.deployment.model.environment.ValueTransformer.USER_P
 		isPublishVersion = true,
 		aliasName = "${lambdas_alias_name}",
 		logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
-		memory = 256
+		memory = 500
 )
 @DependsOn(resourceType = ResourceType.COGNITO_USER_POOL, name = "${booking_userpool}")
 @DependsOn(resourceType = ResourceType.DYNAMODB_TABLE, name = "${tables_table}")
