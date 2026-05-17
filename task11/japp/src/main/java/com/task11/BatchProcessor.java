@@ -41,8 +41,8 @@ import static com.syndicate.deployment.model.environment.ValueTransformer.RDS_DB
 	isPublishVersion = true,
 	aliasName = "${lambdas_alias_name}",
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
-	memory = 256,
-	timeout = 120,
+	memory = 300,
+	timeout = 390,
 	subnetsIds = {"${lambda_sn_id}"},
 	securityGroupIds = {"${logistic_sg_id}"}
 )
