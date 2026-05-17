@@ -21,6 +21,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Savepoint;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
@@ -41,8 +42,8 @@ import static com.syndicate.deployment.model.environment.ValueTransformer.RDS_DB
 	isPublishVersion = true,
 	aliasName = "${lambdas_alias_name}",
 	logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED,
-	memory = 300,
-	timeout = 390,
+	memory = 290,
+	timeout = 300,
 	subnetsIds = {"${lambda_sn_id}"},
 	securityGroupIds = {"${logistic_sg_id}"}
 )
@@ -67,7 +68,7 @@ import static com.syndicate.deployment.model.environment.ValueTransformer.RDS_DB
 )
 public class BatchProcessor implements RequestHandler<S3Event, Map<String, Object>> {
 
-	private static final int BATCH_SIZE = 500;
+	private static final int BATCH_SIZE = 200;
 
 	private static final S3Client S3 = S3Client.builder()
 			.region(Region.of(System.getenv().getOrDefault("REGION",
@@ -144,37 +145,84 @@ public class BatchProcessor implements RequestHandler<S3Event, Map<String, Objec
 		try (Connection conn = DbConfig.getConnection();
 		     PreparedStatement ps = conn.prepareStatement(sql)) {
 			conn.setAutoCommit(false);
-			int count = 0;
+			List<Map<String, String>> buffer = new ArrayList<>();
+			int read = 0, inserted = 0, skipped = 0;
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if (line.trim().isEmpty()) continue;
-				Map<String, String> row = toMap(headers, parseCsvLine(line));
-				ps.setString(1, row.get("shipment_id"));
-				ps.setString(2, row.get("order_id"));
-				ps.setString(3, row.get("origin"));
-				ps.setString(4, row.get("destination"));
-				String weight = row.get("weight_kg");
-				if (weight == null || weight.isEmpty()) {
-					ps.setNull(5, Types.NUMERIC);
-				} else {
-					ps.setDouble(5, Double.parseDouble(weight));
+				try {
+					buffer.add(toMap(headers, parseCsvLine(line)));
+					read++;
+				} catch (Exception e) {
+					skipped++;
+					context.getLogger().log("Bad shipment row skipped: " + e.getMessage());
+					continue;
 				}
-				Timestamp ts = parseTimestamp(row.get("created_at"));
-				if (ts == null) {
-					ps.setNull(6, Types.TIMESTAMP);
-				} else {
-					ps.setTimestamp(6, ts);
+				if (buffer.size() >= BATCH_SIZE) {
+					int[] r = flushShipments(conn, ps, buffer, context);
+					inserted += r[0];
+					skipped += r[1];
+					buffer.clear();
 				}
+			}
+			if (!buffer.isEmpty()) {
+				int[] r = flushShipments(conn, ps, buffer, context);
+				inserted += r[0];
+				skipped += r[1];
+			}
+			context.getLogger().log("Shipments: read=" + read + ", inserted=" + inserted + ", skipped=" + skipped);
+		}
+	}
+
+	private int[] flushShipments(Connection conn, PreparedStatement ps,
+	                              List<Map<String, String>> rows, Context context) throws Exception {
+		try {
+			for (Map<String, String> row : rows) {
+				bindShipment(ps, row);
 				ps.addBatch();
-				count++;
-				if (count % BATCH_SIZE == 0) {
-					ps.executeBatch();
-					conn.commit();
-				}
 			}
 			ps.executeBatch();
 			conn.commit();
-			context.getLogger().log("Loaded " + count + " shipment rows");
+			return new int[]{rows.size(), 0};
+		} catch (Exception batchEx) {
+			conn.rollback();
+			ps.clearBatch();
+			context.getLogger().log("Shipment batch failed, retrying row-by-row: " + batchEx.getMessage());
+			int inserted = 0, skipped = 0;
+			for (Map<String, String> row : rows) {
+				Savepoint sp = conn.setSavepoint();
+				try {
+					bindShipment(ps, row);
+					ps.executeUpdate();
+					conn.releaseSavepoint(sp);
+					inserted++;
+				} catch (Exception rowEx) {
+					conn.rollback(sp);
+					skipped++;
+					context.getLogger().log("Skip shipment " + row.get("shipment_id") + ": " + rowEx.getMessage());
+				}
+			}
+			conn.commit();
+			return new int[]{inserted, skipped};
+		}
+	}
+
+	private void bindShipment(PreparedStatement ps, Map<String, String> row) throws Exception {
+		ps.setString(1, truncate(row.get("shipment_id"), 50));
+		ps.setString(2, truncate(row.get("order_id"), 50));
+		ps.setString(3, truncate(row.get("origin"), 100));
+		ps.setString(4, truncate(row.get("destination"), 100));
+		String weight = row.get("weight_kg");
+		if (weight == null || weight.trim().isEmpty()) {
+			ps.setNull(5, Types.NUMERIC);
+		} else {
+			ps.setDouble(5, Double.parseDouble(weight.trim()));
+		}
+		Timestamp ts = parseTimestamp(row.get("created_at"));
+		if (ts == null) {
+			ps.setNull(6, Types.TIMESTAMP);
+		} else {
+			ps.setTimestamp(6, ts);
 		}
 	}
 
@@ -184,31 +232,78 @@ public class BatchProcessor implements RequestHandler<S3Event, Map<String, Objec
 		try (Connection conn = DbConfig.getConnection();
 		     PreparedStatement ps = conn.prepareStatement(sql)) {
 			conn.setAutoCommit(false);
-			int count = 0;
+			List<Map<String, String>> buffer = new ArrayList<>();
+			int read = 0, inserted = 0, skipped = 0;
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if (line.trim().isEmpty()) continue;
-				Map<String, String> row = toMap(headers, parseCsvLine(line));
-				ps.setString(1, row.get("carrier_id"));
-				ps.setString(2, row.get("name"));
-				ps.setString(3, row.get("email"));
-				ps.setString(4, row.get("phone"));
-				String active = row.get("is_active");
-				if (active == null || active.isEmpty()) {
-					ps.setNull(5, Types.BOOLEAN);
-				} else {
-					ps.setBoolean(5, parseBoolean(active));
+				try {
+					buffer.add(toMap(headers, parseCsvLine(line)));
+					read++;
+				} catch (Exception e) {
+					skipped++;
+					context.getLogger().log("Bad carrier row skipped: " + e.getMessage());
+					continue;
 				}
+				if (buffer.size() >= BATCH_SIZE) {
+					int[] r = flushCarriers(conn, ps, buffer, context);
+					inserted += r[0];
+					skipped += r[1];
+					buffer.clear();
+				}
+			}
+			if (!buffer.isEmpty()) {
+				int[] r = flushCarriers(conn, ps, buffer, context);
+				inserted += r[0];
+				skipped += r[1];
+			}
+			context.getLogger().log("Carriers: read=" + read + ", inserted=" + inserted + ", skipped=" + skipped);
+		}
+	}
+
+	private int[] flushCarriers(Connection conn, PreparedStatement ps,
+	                             List<Map<String, String>> rows, Context context) throws Exception {
+		try {
+			for (Map<String, String> row : rows) {
+				bindCarrier(ps, row);
 				ps.addBatch();
-				count++;
-				if (count % BATCH_SIZE == 0) {
-					ps.executeBatch();
-					conn.commit();
-				}
 			}
 			ps.executeBatch();
 			conn.commit();
-			context.getLogger().log("Loaded " + count + " carrier rows");
+			return new int[]{rows.size(), 0};
+		} catch (Exception batchEx) {
+			conn.rollback();
+			ps.clearBatch();
+			context.getLogger().log("Carrier batch failed, retrying row-by-row: " + batchEx.getMessage());
+			int inserted = 0, skipped = 0;
+			for (Map<String, String> row : rows) {
+				Savepoint sp = conn.setSavepoint();
+				try {
+					bindCarrier(ps, row);
+					ps.executeUpdate();
+					conn.releaseSavepoint(sp);
+					inserted++;
+				} catch (Exception rowEx) {
+					conn.rollback(sp);
+					skipped++;
+					context.getLogger().log("Skip carrier " + row.get("carrier_id") + ": " + rowEx.getMessage());
+				}
+			}
+			conn.commit();
+			return new int[]{inserted, skipped};
+		}
+	}
+
+	private void bindCarrier(PreparedStatement ps, Map<String, String> row) throws Exception {
+		ps.setString(1, truncate(row.get("carrier_id"), 50));
+		ps.setString(2, truncate(row.get("name"), 100));
+		ps.setString(3, truncate(row.get("email"), 100));
+		ps.setString(4, truncate(row.get("phone"), 20));
+		String active = row.get("is_active");
+		if (active == null || active.trim().isEmpty()) {
+			ps.setNull(5, Types.BOOLEAN);
+		} else {
+			ps.setBoolean(5, parseBoolean(active));
 		}
 	}
 
@@ -218,33 +313,85 @@ public class BatchProcessor implements RequestHandler<S3Event, Map<String, Objec
 		try (Connection conn = DbConfig.getConnection();
 		     PreparedStatement ps = conn.prepareStatement(sql)) {
 			conn.setAutoCommit(false);
-			int count = 0;
+			List<Map<String, String>> buffer = new ArrayList<>();
+			int read = 0, inserted = 0, skipped = 0;
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if (line.trim().isEmpty()) continue;
-				Map<String, String> row = toMap(headers, parseCsvLine(line));
-				ps.setString(1, row.get("shipment_id"));
-				ps.setString(2, row.get("carrier_id"));
-				ps.setString(3, row.get("status"));
-				ps.setString(4, row.get("location"));
-				ps.setString(5, row.get("notes"));
-				Timestamp ts = parseTimestamp(row.get("timestamp"));
-				if (ts == null) {
-					ps.setNull(6, Types.TIMESTAMP);
-				} else {
-					ps.setTimestamp(6, ts);
+				try {
+					buffer.add(toMap(headers, parseCsvLine(line)));
+					read++;
+				} catch (Exception e) {
+					skipped++;
+					context.getLogger().log("Bad status_update row skipped: " + e.getMessage());
+					continue;
 				}
+				if (buffer.size() >= BATCH_SIZE) {
+					int[] r = flushStatusUpdates(conn, ps, buffer, context);
+					inserted += r[0];
+					skipped += r[1];
+					buffer.clear();
+				}
+			}
+			if (!buffer.isEmpty()) {
+				int[] r = flushStatusUpdates(conn, ps, buffer, context);
+				inserted += r[0];
+				skipped += r[1];
+			}
+			context.getLogger().log("StatusUpdates: read=" + read + ", inserted=" + inserted + ", skipped=" + skipped);
+		}
+	}
+
+	private int[] flushStatusUpdates(Connection conn, PreparedStatement ps,
+	                                  List<Map<String, String>> rows, Context context) throws Exception {
+		try {
+			for (Map<String, String> row : rows) {
+				bindStatusUpdate(ps, row);
 				ps.addBatch();
-				count++;
-				if (count % BATCH_SIZE == 0) {
-					ps.executeBatch();
-					conn.commit();
-				}
 			}
 			ps.executeBatch();
 			conn.commit();
-			context.getLogger().log("Loaded " + count + " status_update rows");
+			return new int[]{rows.size(), 0};
+		} catch (Exception batchEx) {
+			conn.rollback();
+			ps.clearBatch();
+			context.getLogger().log("StatusUpdate batch failed, retrying row-by-row: " + batchEx.getMessage());
+			int inserted = 0, skipped = 0;
+			for (Map<String, String> row : rows) {
+				Savepoint sp = conn.setSavepoint();
+				try {
+					bindStatusUpdate(ps, row);
+					ps.executeUpdate();
+					conn.releaseSavepoint(sp);
+					inserted++;
+				} catch (Exception rowEx) {
+					conn.rollback(sp);
+					skipped++;
+					context.getLogger().log("Skip status_update shipment=" + row.get("shipment_id") + ": " + rowEx.getMessage());
+				}
+			}
+			conn.commit();
+			return new int[]{inserted, skipped};
 		}
+	}
+
+	private void bindStatusUpdate(PreparedStatement ps, Map<String, String> row) throws Exception {
+		ps.setString(1, truncate(row.get("shipment_id"), 50));
+		ps.setString(2, truncate(row.get("carrier_id"), 50));
+		ps.setString(3, row.get("status"));
+		ps.setString(4, truncate(row.get("location"), 100));
+		ps.setString(5, row.get("notes"));
+		Timestamp ts = parseTimestamp(row.get("timestamp"));
+		if (ts == null) {
+			ps.setNull(6, Types.TIMESTAMP);
+		} else {
+			ps.setTimestamp(6, ts);
+		}
+	}
+
+	private static String truncate(String value, int max) {
+		if (value == null) return null;
+		return value.length() <= max ? value : value.substring(0, max);
 	}
 
 	private static Map<String, String> toMap(List<String> headers, List<String> values) {
