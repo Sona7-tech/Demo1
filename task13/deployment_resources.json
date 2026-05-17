@@ -96,7 +96,8 @@
     "ignore_public_acls": false,
     "block_public_policy": false,
     "restrict_public_buckets": false,
-    "static_website_hosting": {
+    "website_hosting": {
+      "enabled": true,
       "index_document": "index.html",
       "error_document": "error.html"
     },
